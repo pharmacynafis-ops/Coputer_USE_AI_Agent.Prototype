@@ -1,0 +1,87 @@
+<!-- templates/interactive_scoping_analysis.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>تحليل نطاق العمل</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f1117;
+            color: white;
+            padding: 2rem;
+        }
+        .question-card {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 12px;
+            border: none;
+        }
+        button {
+            background: #818cf8;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 تحديد نطاق العمل (Scope)</h1>
+    <div id="questions-container"></div>
+    <button id="submitBtn">✅ تأكيد النطاق والمتابعة</button>
+
+    <script>
+        const questions = [
+            { id: "workspace_path", text: "📁 ما هو المجلد الرئيسي للعمل؟ (اتركه فارغاً لاستخدام المجلد الحالي)", default: "" },
+            { id: "allow_subdirs", text: "📂 هل تسمح بإنشاء ملفات في أي مجلد فرعي؟ (نعم/لا)", type: "confirm", default: true },
+            { id: "forbidden_dirs", text: "🚫 مجلدات ممنوعة (افصل بينها بفاصلة):", default: "C:\\Windows, C:\\Program Files" },
+            { id: "safe_mode", text: "🛡️ تفعيل الوضع الآمن (يمنع الكتابة خارج النطاق تماماً)؟", type: "confirm", default: true }
+        ];
+
+        function render() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+            questions.forEach(q => {
+                const div = document.createElement('div');
+                div.className = 'question-card';
+                div.innerHTML = `<strong>${q.text}</strong><br>`;
+                if (q.type === 'confirm') {
+                    const yes = `<label><input type="radio" name="${q.id}" value="true" ${q.default ? 'checked' : ''}> نعم</label>`;
+                    const no = `<label><input type="radio" name="${q.id}" value="false" ${!q.default ? 'checked' : ''}> لا</label>`;
+                    div.innerHTML += yes + no;
+                } else {
+                    div.innerHTML += `<input type="text" id="${q.id}" value="${q.default}" style="width:100%">`;
+                }
+                container.appendChild(div);
+            });
+        }
+
+        document.getElementById('submitBtn').onclick = () => {
+            const answers = {};
+            questions.forEach(q => {
+                if (q.type === 'confirm') {
+                    const val = document.querySelector(`input[name="${q.id}"]:checked`).value;
+                    answers[q.id] = val === 'true';
+                } else {
+                    const input = document.getElementById(q.id);
+                    answers[q.id] = input.value;
+                }
+            });
+            fetch('/api/set_scope', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(answers)
+            }).then(() => {
+                // إزالة الطلب المعلق لمنع الحلقة اللانهائية
+                sessionStorage.removeItem('pendingPrompt');
+                window.location.href = '/';
+            });
+        };
+        render();
+    </script>
+</body>
+</html>

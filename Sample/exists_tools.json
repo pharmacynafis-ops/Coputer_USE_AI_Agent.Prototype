@@ -1,0 +1,19 @@
+{
+  "tools": [
+    {
+      "name": "write_file",
+      "description": "يكتب محتوى نصي في ملف. إذا لم يكن الملف موجوداً سيتم إنشاؤه.",
+      "parameters": ["path", "content"]
+    },
+    {
+      "name": "read_file",
+      "description": "يقرأ محتوى ملف ويعيده كنص.",
+      "parameters": ["path"]
+    },
+    {
+      "name": "execute_command",
+      "description": "ينفذ أمراً في شِل النظام ويعيد المخرجات.",
+      "parameters": ["command", "timeout_seconds"]
+    }
+  ]
+}

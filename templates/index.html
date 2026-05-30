@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AI Computer Use Agent | التخطيط والتنفيذ الحي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4.19.0/css/xterm.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm@4.19.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io@4.6.1/client-dist/socket.io.min.js"></script>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0c10;
+            color: #eef2ff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: rgba(18, 22, 28, 0.95);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(72, 85, 106, 0.4);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem 1.2rem;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, #a5f3fc, #818cf8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .sidebar-header p {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 6px;
+        }
+
+        .sidebar-section {
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: #9ca3af;
+            margin-bottom: 12px;
+        }
+
+        .api-key-area {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .api-key-input {
+            flex: 1;
+            background: #1e2a3a;
+            border: 1px solid #334155;
+            padding: 8px 12px;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.75rem;
+            font-family: monospace;
+            outline: none;
+        }
+
+        .api-key-input:focus {
+            border-color: #818cf8;
+            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.3);
+        }
+
+        .glass-btn {
+            background: rgba(129, 140, 248, 0.2);
+            border: 1px solid #818cf8;
+            padding: 6px 12px;
+            border-radius: 12px;
+            color: #cbd5ff;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .glass-btn:hover {
+            background: #818cf8;
+            color: #0f172a;
+        }
+
+        .danger-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #fecaca;
+        }
+
+        .danger-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 0.7rem;
+            background: #1e293b;
+            padding: 4px 8px;
+            border-radius: 20px;
+            color: #94a3b8;
+        }
+
+        .three-container {
+            margin-top: 12px;
+            height: 220px;
+            background: #0f1217;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #2d3748;
+        }
+
+        .three-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+
+        .expand-graph-btn {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .expand-btn {
+            background: rgba(129, 140, 248, 0.3);
+            border: 1px solid #818cf8;
+            padding: 6px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.7rem;
+            text-align: center;
+        }
+
+        .tool-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0f1117;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.8rem;
+            background: rgba(15, 17, 23, 0.8);
+            border-bottom: 1px solid #262e3c;
+        }
+
+        .chat-header h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .chat-header .glass-btn {
+            background: rgba(129, 140, 248, 0.2);
+            border: 1px solid #818cf8;
+            color: #cbd5ff;
+            transition: all 0.2s ease;
+        }
+
+        .chat-header .glass-btn:hover {
+            background: #818cf8;
+            color: #0f172a;
+            transform: scale(1.02);
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 12px 18px;
+            border-radius: 24px;
+            line-height: 1.5;
+            position: relative;
+            animation: fadeSlideUp 0.2s ease;
+            word-break: break-word;
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #1e2a47, #0f172a);
+            align-self: flex-end;
+            border-bottom-right-radius: 6px;
+            border: 1px solid #334155;
+        }
+
+        .bot-message {
+            background: #1e293b;
+            align-self: flex-start;
+            border-bottom-left-radius: 6px;
+            border: 1px solid #2d3a4e;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .thinking-step {
+            font-size: 0.85rem;
+            background: #0f172a;
+            border-left: 3px solid #818cf8;
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 12px;
+        }
+
+        .step-status {
+            color: #86efac;
+            font-size: 0.8rem;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .message-actions {
+            position: absolute;
+            top: 6px;
+            right: 12px;
+            opacity: 0;
+            transition: 0.1s;
+        }
+
+        .message:hover .message-actions {
+            opacity: 1;
+        }
+
+        .copy-msg-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .copy-msg-btn:hover {
+            color: white;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-container {
+            padding: 18px 24px;
+            background: #0f1117;
+            border-top: 1px solid #262e3c;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        textarea {
+            flex: 1;
+            background: #1a1f2a;
+            border: 1px solid #334155;
+            border-radius: 28px;
+            padding: 14px 18px;
+            color: white;
+            font-size: 0.95rem;
+            resize: none;
+            font-family: inherit;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #818cf8;
+            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.3);
+        }
+
+        .send-btn {
+            background: #818cf8;
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 40px;
+            cursor: pointer;
+            color: #0f172a;
+            font-size: 1.2rem;
+        }
+
+        .send-btn:hover {
+            background: #a5b4fc;
+            transform: scale(1.02);
+        }
+
+        .messages-area::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .messages-area::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        .messages-area::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            width: 90%;
+            height: 90%;
+            background: #0f1217;
+            border-radius: 24px;
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            background: #11161f;
+            border-bottom: 1px solid #2d3748;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-modal {
+            background: #ef4444;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            flex: 1;
+            position: relative;
+        }
+
+        #modalThreeContainer {
+            width: 100%;
+            height: 100%;
+        }
+
+        .node-info-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a1f2a;
+            border: 1px solid #818cf8;
+            border-radius: 20px;
+            padding: 20px;
+            width: 400px;
+            max-width: 80%;
+            z-index: 1100;
+            backdrop-filter: blur(8px);
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1050;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>🧠 AI Computer Use</h2>
+                <p>تخطيط ذكي • تنفيذ حي • مسار ثلاثي الأبعاد</p>
+            </div>
+            <div class="sidebar-section">
+                <div class="section-title">🔐 OpenRouter API Key</div>
+                <div class="api-key-area">
+                    <input type="password" id="apiKeyInput" class="api-key-input" placeholder="sk-or-v1-..."
+                        autocomplete="off">
+                    <button id="saveApiKeyBtn" class="glass-btn">حفظ</button>
+                </div>
+                <div id="apiKeyStatus" class="status-badge">⚪ لم يتم تعيين</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="section-title">📊 مسار التفكير (3D)</div>
+                <div class="three-container" id="threeContainer"></div>
+                <div class="expand-graph-btn">
+                    <button id="expandGraphBtn" class="expand-btn">🔍 تكبير المسار</button>
+                </div>
+                <div class="tool-buttons">
+                    <button id="copyLastAgentMsgBtn" class="glass-btn" style="flex:1">📋 نسخ آخر رد</button>
+                    <button id="clearHistoryBtn" class="glass-btn danger-btn" style="flex:1">🗑 مسح الكل</button>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="section-title">⚙️ الإجراءات السريعة</div>
+                <button id="copyUserPromptBtn" class="glass-btn" style="width:100%">📝 نسخ طلب المستخدم الحالي</button>
+            </div>
+            <div style="flex:1"></div>
+            <div class="sidebar-section" style="border-bottom: none; font-size:11px; color:#4b5563;">
+                <span>✨ Agent v3.0 • تخطيط + تنفيذ فوري</span>
+            </div>
+        </div>
+        <div class="main-chat">
+            <div class="chat-header">
+                <h1>💬 Agent Terminal Studio</h1>
+                <button id="newSessionBtn" class="glass-btn" onclick="startNewSession()"
+                    style="display: flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 40px; font-weight: 500;">
+                    🔄 New Session
+                </button>
+            </div>
+            <div class="messages-area" id="messagesArea">
+                <!-- 2. Terminal Container -->
+                <div id="terminal-container" style="height: 400px; width: 100%;"></div>
+
+            </div>
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea id="promptInput" rows="1"
+                        placeholder="اطلب أي شيء... (مثال: أنشئ ملف test.txt فيه نص 'مرحباً')"></textarea>
+                    <button id="sendButton" class="send-btn">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="graphModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🧠 مسار التفكير - ثلاثي الأبعاد</h3>
+                <button id="closeModalBtn" class="close-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="modalThreeContainer" style="width:100%; height:100%;"></div>
+            </div>
+        </div>
+    </div>
+    <div id="nodeInfoOverlay" class="overlay"></div>
+    <div id="nodeInfoModal" class="node-info-modal">
+        <h4>📌 تفاصيل الخطوة</h4>
+        <div id="nodeInfoContent"></div>
+        <button id="closeNodeInfoBtn">إغلاق</button>
+    </div>
+
+    <script type="module">
+        const messagesDiv = document.getElementById('messagesArea');
+
+        import * as THREE from 'three';
+        import { OrbitControls } from 'https://unpkg.com/three@0.128.0/examples/jsm/controls/OrbitControls.js';
+
+        // ---------- THREE.JS Setup (sidebar + modal) ----------
+        let sidebarGraph = null, modalGraph = null;
+        let currentNodesList = [];
+
+        function initThree(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return null;
+            const width = container.clientWidth, height = container.clientHeight;
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f1217);
+            scene.fog = new THREE.FogExp2(0x0f1217, 0.008);
+            const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+            camera.position.set(5, 4, 6);
+            camera.lookAt(0, 0, 0);
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(width, height);
+            container.innerHTML = '';
+            container.appendChild(renderer.domElement);
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.enableZoom = true;
+            const ambient = new THREE.AmbientLight(0x404060);
+            scene.add(ambient);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+            dirLight.position.set(2, 5, 3);
+            scene.add(dirLight);
+            const backLight = new THREE.PointLight(0x4466cc, 0.3);
+            backLight.position.set(-2, 1, -3);
+            scene.add(backLight);
+            const graphGroup = new THREE.Group();
+            scene.add(graphGroup);
+            const gridHelper = new THREE.GridHelper(12, 20, 0x334155, 0x1e293b);
+            gridHelper.position.y = -1.5;
+            scene.add(gridHelper);
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+            window.addEventListener('resize', () => {
+                const newW = container.clientWidth, newH = container.clientHeight;
+                camera.aspect = newW / newH;
+                camera.updateProjectionMatrix();
+                renderer.setSize(newW, newH);
+            });
+            return { scene, camera, renderer, controls, graphGroup };
+        }
+
+        function clearGraph() {
+            if (sidebarGraph) while (sidebarGraph.graphGroup.children.length) sidebarGraph.graphGroup.remove(sidebarGraph.graphGroup.children[0]);
+            if (modalGraph) while (modalGraph.graphGroup.children.length) modalGraph.graphGroup.remove(modalGraph.graphGroup.children[0]);
+            currentNodesList = [];
+        }
+
+        function addNodeToGraph(stepData) {
+            const radius = 0.35;
+            const color = stepData.is_goal_completed ? 0x86efac : 0x818cf8;
+            const geometry = new THREE.SphereGeometry(radius, 32, 32);
+            const material = new THREE.MeshStandardMaterial({ color, emissive: stepData.is_goal_completed ? 0x228833 : 0x111133 });
+            const sphere = new THREE.Mesh(geometry, material);
+            const angle = (currentNodesList.length * 0.8) % (Math.PI * 2);
+            const x = Math.sin(angle) * 2.2;
+            const z = Math.cos(angle) * 2.2;
+            const y = currentNodesList.length * 0.4 + 0.2;
+            sphere.position.set(x, y, z);
+            const prevPos = currentNodesList.length ? currentNodesList[currentNodesList.length - 1].mesh.position.clone() : null;
+            const nodeObj = {
+                mesh: sphere, stepNumber: stepData.stepNumber,
+                reasoning: stepData.reasoning, current_step: stepData.current_step,
+                tool_called: stepData.tool_called, message: stepData.message,
+                isFinal: stepData.is_goal_completed, position: sphere.position.clone(), prevPosition: prevPos
+            };
+            currentNodesList.push(nodeObj);
+            if (sidebarGraph) {
+                sidebarGraph.graphGroup.add(sphere);
+                if (prevPos) {
+                    const points = [prevPos, sphere.position.clone()];
+                    const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+                    const lineMat = new THREE.LineBasicMaterial({ color: 0x6b7280 });
+                    sidebarGraph.graphGroup.add(new THREE.Line(lineGeo, lineMat));
+                }
+            }
+            // Add click handler
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            function onNodeClick(event, camera, domElement) {
+                const rect = domElement.getBoundingClientRect();
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                if (raycaster.intersectObject(sphere).length) showNodeInfo(nodeObj);
+            }
+            if (sidebarGraph?.renderer) {
+                const canvas = sidebarGraph.renderer.domElement;
+                canvas.addEventListener('click', (e) => onNodeClick(e, sidebarGraph.camera, canvas));
+            }
+            return sphere;
+        }
+
+        function showNodeInfo(node) {
+            const modal = document.getElementById('nodeInfoModal');
+            const overlay = document.getElementById('nodeInfoOverlay');
+            const content = document.getElementById('nodeInfoContent');
+            content.innerHTML = `
+            <p><strong>🔢 الخطوة:</strong> ${node.stepNumber}</p>
+            <p><strong>🧠 الوصف:</strong> ${escapeHtml(node.reasoning || '...')}</p>
+            <p><strong>⚡ الإجراء:</strong> ${escapeHtml(node.current_step || '')}</p>
+            <p><strong>🔧 الأداة:</strong> ${node.tool_called !== 'none' ? node.tool_called : 'لا توجد'}</p>
+            <p><strong>💬 النتيجة:</strong> ${node.message ? escapeHtml(node.message) : 'لا توجد'}</p>
+            ${node.isFinal ? '<p><strong>✅ اكتمل الهدف</strong></p>' : ''}
+        `;
+            modal.style.display = 'flex';
+            overlay.style.display = 'block';
+        }
+
+        function escapeHtml(str) { return str?.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])) || ''; }
+        document.addEventListener('DOMContentLoaded', () => {
+            const newSessionBtn = document.getElementById('newSessionBtn');
+            if (newSessionBtn) {
+                newSessionBtn.addEventListener('click', async () => {
+                    try {
+                        messagesDiv.innerHTML = '';
+
+                        // Call backend to reset context_owner and chat_history.json
+                        const response = await fetch('/new_session', { method: 'POST' });
+                        const data = await response.json();
+
+                        if (data.status === 'success') {
+                            // Clear the visual chat UI (Adjust 'chat-container' to your actual div ID)
+                            const chatContainer = document.getElementById('chat-container')
+                                || document.querySelector('.chat-messages');
+                            if (chatContainer) {
+                                chatContainer.innerHTML = '';
+                            }
+                            console.log("New session initialized successfully.");
+                        } else {
+                            alert("Failed to start new session: " + data.message);
+                        }
+                    } catch (error) {
+                        console.error("Error resetting session:", error);
+                    }
+                });
+            }
+        });
+
+        async function startNewSession() {
+            if (!confirm("Start a new session? Current chat context will be cleared, but your long-term memory is preserved.")) {
+                return;
+            }
+
+            try {
+                messagesDiv.innerHTML = '';
+                // Call the backend to reset the ContextOwner
+                const response = await fetch('/new_session', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // Clear the frontend chat UI
+                    const chatContainer = document.getElementById('messagesArea'); // Adjust ID to your actual chat div
+                    if (chatContainer) chatContainer.innerHTML = '';
+
+                    // Optionally trigger the stream endpoint to send a fresh session_start event
+                    connectStream(); // Assuming this is your existing SSE connection function
+                    alert("New session started successfully!");
+                } else {
+                    alert("Failed to start new session: " + data.message);
+                }
+            } catch (error) {
+                console.error("Error starting new session:", error);
+                alert("An error occurred while resetting the session.");
+            }
+        }
+
+        function openModalGraph() {
+            const modal = document.getElementById('graphModal');
+            modal.style.display = 'flex';
+            if (!modalGraph) {
+                modalGraph = initThree('modalThreeContainer');
+                currentNodesList.forEach(node => {
+                    const sphere = node.mesh.clone();
+                    sphere.position.copy(node.mesh.position);
+                    modalGraph.graphGroup.add(sphere);
+                    if (node.prevPosition) {
+                        const pts = [node.prevPosition.clone(), sphere.position.clone()];
+                        const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+                        modalGraph.graphGroup.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0x6b7280 })));
+                    }
+                    const canvas = modalGraph.renderer.domElement;
+                    canvas.addEventListener('click', (e) => {
+                        const rect = canvas.getBoundingClientRect();
+                        const mouse = new THREE.Vector2();
+                        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                        const raycaster = new THREE.Raycaster();
+                        raycaster.setFromCamera(mouse, modalGraph.camera);
+                        if (raycaster.intersectObject(sphere).length) showNodeInfo(node);
+                    });
+                });
+            } else {
+                while (modalGraph.graphGroup.children.length) modalGraph.graphGroup.remove(modalGraph.graphGroup.children[0]);
+                currentNodesList.forEach(node => {
+                    const sphere = node.mesh.clone();
+                    sphere.position.copy(node.mesh.position);
+                    modalGraph.graphGroup.add(sphere);
+                    if (node.prevPosition) {
+                        const pts = [node.prevPosition.clone(), sphere.position.clone()];
+                        const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+                        modalGraph.graphGroup.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0x6b7280 })));
+                    }
+                });
+            }
+        }
+
+        // ---------- UI Elements ----------
+        const promptInput = document.getElementById('promptInput');
+        const sendBtn = document.getElementById('sendButton');
+        const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const apiKeyStatusSpan = document.getElementById('apiKeyStatus');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const copyLastAgentMsgBtn = document.getElementById('copyLastAgentMsgBtn');
+        const copyUserPromptBtn = document.getElementById('copyUserPromptBtn');
+        const expandGraphBtn = document.getElementById('expandGraphBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const closeNodeInfoBtn = document.getElementById('closeNodeInfoBtn');
+        const nodeInfoOverlay = document.getElementById('nodeInfoOverlay');
+
+        expandGraphBtn.onclick = openModalGraph;
+        closeModalBtn.onclick = () => document.getElementById('graphModal').style.display = 'none';
+        closeNodeInfoBtn.onclick = () => {
+            document.getElementById('nodeInfoModal').style.display = 'none';
+            nodeInfoOverlay.style.display = 'none';
+        };
+        nodeInfoOverlay.onclick = () => {
+            document.getElementById('nodeInfoModal').style.display = 'none';
+            nodeInfoOverlay.style.display = 'none';
+        };
+
+        let currentEventSource = null;
+        let currentBotContainer = null;
+        let lastAgentText = '';
+        let currentUserPromptCache = '';
+        let isSavingHistory = false;
+
+        async function loadChatHistory() {
+            try {
+                const res = await fetch('/api/history');
+                const history = await res.json();
+                messagesDiv.innerHTML = '';
+                // استخدام saveToHistory = false لمنع إعادة حفظ السجل
+                for (const item of history) {
+                    if (item.role === 'user') appendMessage('user', item.content, false);
+                    else if (item.role === 'assistant') appendMessage('bot', item.content, false);
+                }
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+                const pending = sessionStorage.getItem('pendingPrompt');
+                if (pending) {
+                    sessionStorage.removeItem('pendingPrompt');
+                    promptInput.value = pending;
+                    sendPrompt();
+                }
+            } catch (e) { console.warn(e); }
+        }
+
+        function appendMessage(role, text, saveToHistory = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role === 'user' ? 'user-message' : 'bot-message'}`;
+            const contentSpan = document.createElement('span');
+            contentSpan.innerHTML = text.replace(/\n/g, '<br>');
+            messageDiv.appendChild(contentSpan);
+            const actions = document.createElement('div');
+            actions.className = 'message-actions';
+            const copyBtn = document.createElement('button');
+            copyBtn.innerHTML = '📋';
+            copyBtn.className = 'copy-msg-btn';
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(text);
+                copyBtn.innerHTML = '✅';
+                setTimeout(() => copyBtn.innerHTML = '📋', 1500);
+            };
+            actions.appendChild(copyBtn);
+            messageDiv.appendChild(actions);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            // حفظ فقط إذا كان مطلوباً ولم يتم حفظها من قبل ولم نكن في حالة حفظ
+            if (saveToHistory && role !== 'agent' && !isSavingHistory) {
+                isSavingHistory = true;
+                // التحقق من عدم وجود نفس الرسالة في السجل بالفعل
+                const existingMessages = document.querySelectorAll('.message');
+                let isDuplicate = false;
+                for (let i = 0; i < existingMessages.length - 1; i++) {
+                    if (existingMessages[i].innerText === text && existingMessages[i].className === messageDiv.className) {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+                if (!isDuplicate) {
+                    fetch('/api/history', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ role, content: text })
+                    }).catch(e => console.warn('Failed to save history:', e)).finally(() => {
+                        isSavingHistory = false;
+                    });
+                } else {
+                    isSavingHistory = false;
+                }
+            }
+            return messageDiv;
+        }
+
+        function displayPlan(plan) {
+            const planDiv = document.createElement('div');
+            planDiv.className = 'message bot-message';
+            planDiv.style.background = '#1e2a3a';
+            let html = `<strong>📋 الخطة (${plan.total_steps} خطوة)</strong><br>`;
+            for (const step of plan.steps) {
+                html += `🔹 الخطوة ${step.step_number}: ${escapeHtml(step.description)}<br>`;
+            }
+            html += `<em>${escapeHtml(plan.explanation || '')}</em>`;
+            planDiv.innerHTML = html;
+            messagesDiv.appendChild(planDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addStepStart(stepNum, description, tool) {
+            if (!currentBotContainer) {
+                currentBotContainer = document.createElement('div');
+                currentBotContainer.className = 'message bot-message';
+                messagesDiv.appendChild(currentBotContainer);
+            }
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'thinking-step';
+            stepDiv.id = `step-${stepNum}`;
+            stepDiv.innerHTML = `<strong>🔄 الخطوة ${stepNum}: ${escapeHtml(description)}</strong><br>⚙️ الأداة: ${escapeHtml(tool)}<br><span class="step-status">⏳ جاري التنفيذ...</span>`;
+            currentBotContainer.appendChild(stepDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function updateStepResult(stepNum, result, success) {
+            const stepDiv = document.getElementById(`step-${stepNum}`);
+            if (stepDiv) {
+                const statusSpan = stepDiv.querySelector('.step-status');
+                if (success) statusSpan.innerHTML = `✅ تم بنجاح: ${escapeHtml(result.substring(0, 200))}`;
+                else statusSpan.innerHTML = `❌ فشل: ${escapeHtml(result)}`;
+            }
+        }
+
+        function showStepError(stepNum, error) {
+            const stepDiv = document.getElementById(`step-${stepNum}`);
+            if (stepDiv) {
+                const statusSpan = stepDiv.querySelector('.step-status');
+                statusSpan.innerHTML = `⚠️ خطأ: ${escapeHtml(error)}`;
+                statusSpan.style.color = '#ff8888';
+            }
+        }
+
+        function displayRefinedPlan(plan) {
+            const refineDiv = document.createElement('div');
+            refineDiv.className = 'message bot-message';
+            refineDiv.style.background = '#2a1e3a';
+            refineDiv.innerHTML = `<strong>🔄 تم تعديل الخطة:</strong><br>${escapeHtml(plan.explanation || '')}`;
+            messagesDiv.appendChild(refineDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function finalizeBotMessage(finalText) {
+            if (!currentBotContainer) {
+                currentBotContainer = appendMessage('bot', finalText, true);
+            } else {
+                const finalDiv = document.createElement('div');
+                finalDiv.style.marginTop = '10px';
+                finalDiv.style.borderTop = '1px solid #334155';
+                finalDiv.style.paddingTop = '8px';
+                finalDiv.innerHTML = `<strong>✅ التقرير النهائي:</strong><br>${escapeHtml(finalText)}`;
+                currentBotContainer.appendChild(finalDiv);
+            }
+            lastAgentText = finalText;
+            currentBotContainer = null;
+        }
+
+        async function sendPrompt() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+            currentUserPromptCache = prompt;
+            appendMessage('user', prompt, true);
+            promptInput.value = '';
+            if (currentEventSource) currentEventSource.close();
+            clearGraph();
+            currentBotContainer = null;
+
+            const url = `/stream?prompt=${encodeURIComponent(prompt)}`;
+            const es = new EventSource(url);
+            currentEventSource = es;
+
+            es.onmessage = (ev) => {
+                const data = JSON.parse(ev.data);
+                if (data.type === 'skip') {
+                    finalizeBotMessage(data.message);
+                    es.close();
+                }
+                else if (data.type === 'plan') {
+                    displayPlan(data.plan);
+                }
+                else if (data.type === 'step_start') {
+                    addStepStart(data.step_number, data.description, data.tool);
+                    addNodeToGraph({
+                        stepNumber: data.step_number,
+                        reasoning: data.description,
+                        current_step: data.tool,
+                        tool_called: data.tool,
+                        message: 'جاري التنفيذ...',
+                        is_goal_completed: false
+                    });
+                }
+                else if (data.type === 'step_result') {
+                    updateStepResult(data.step_number, data.result, data.success);
+                    if (data.result === '__REDIRECT_TO_SCOPE_PAGE__') {
+                        sessionStorage.setItem('pendingPrompt', currentUserPromptCache);
+                        window.location.href = '/scope-setup';
+                        es.close();
+                        return;
+                    }
+                    if (data.result && data.result.startsWith('__SHOW_TOOL_FORM__')) {
+                        sessionStorage.setItem('pendingPrompt', currentUserPromptCache);
+                        window.location.href = '/new-tool-form';
+                        es.close();
+                        return;
+                    }
+                    const existingNode = currentNodesList.find(n => n.stepNumber === data.step_number);
+                    if (existingNode) existingNode.message = data.result.substring(0, 100);
+                }
+                else if (data.type === 'step_failed') {
+                    showStepError(data.step_number, data.error);
+                }
+                else if (data.type === 'plan_refined') {
+                    displayRefinedPlan(data.plan);
+                }
+                else if (data.type === 'final_success') {
+                    finalizeBotMessage(data.report);
+                    addNodeToGraph({
+                        stepNumber: 99, reasoning: 'Goal achieved', current_step: 'Done',
+                        tool_called: 'none', message: data.report, is_goal_completed: true
+                    });
+                    es.close();
+                }
+                else if (data.type === 'final_failure') {
+                    finalizeBotMessage(`❌ فشل التنفيذ: ${data.report}`);
+                    es.close();
+                }
+                else if (data.type === 'need_scope') {
+                    sessionStorage.setItem('pendingPrompt', currentUserPromptCache);
+                    window.location.href = data.redirect;
+                    es.close();
+                }
+                else if (data.error) {
+                    const errDiv = document.createElement('div');
+                    errDiv.className = 'message bot-message';
+                    errDiv.style.background = '#4a1e2c';
+                    errDiv.innerHTML = `⚠️ خطأ: ${data.error}`;
+                    messagesDiv.appendChild(errDiv);
+                    es.close();
+                    currentBotContainer = null;
+                }
+            };
+            es.onerror = (ev) => {
+                es.close();
+                const isRedirecting = sessionStorage.getItem('pendingPrompt') !== null;
+                if (!currentBotContainer && !document.querySelector('.bot-message') && !isRedirecting) {
+                    const errDiv = document.createElement('div');
+                    errDiv.className = 'message bot-message';
+                    errDiv.innerHTML = '⚠️ خطأ في الاتصال بالخادم. تأكد من تشغيل الخادم ومفتاح API.';
+                    messagesDiv.appendChild(errDiv);
+                }
+                currentBotContainer = null;
+            };
+        }
+
+        // API Key management
+        async function loadApiKeyStatus() {
+            const res = await fetch('/api/get_api_key_status');
+            const data = await res.json();
+            if (data.has_key) {
+                apiKeyStatusSpan.innerHTML = `✅ المفتاح موجود: ${data.key_preview || '••••'}`;
+                apiKeyInput.placeholder = "مفتاح موجود (اتركه لتحديث)";
+            } else {
+                apiKeyStatusSpan.innerHTML = '❌ لا يوجد مفتاح API';
+            }
+        }
+
+        saveApiKeyBtn.onclick = async () => {
+            const newKey = apiKeyInput.value.trim();
+            if (!newKey) return;
+            const res = await fetch('/api/set_api_key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ api_key: newKey })
+            });
+            if (res.ok) {
+                alert('تم تحديث مفتاح API بنجاح');
+                await loadApiKeyStatus();
+                apiKeyInput.value = '';
+            } else {
+                alert('فشل تحديث المفتاح');
+            }
+        };
+
+        clearHistoryBtn.onclick = async () => {
+            if (confirm('مسح كل سجل الدردشة؟')) {
+                await fetch('/api/clear_history', { method: 'POST' });
+                messagesDiv.innerHTML = '';
+                currentBotContainer = null;
+                lastAgentText = '';
+                currentUserPromptCache = '';
+                await loadChatHistory();
+            }
+        };
+
+        copyLastAgentMsgBtn.onclick = () => {
+            if (lastAgentText) navigator.clipboard.writeText(lastAgentText);
+            else alert('لا يوجد رد سابق');
+        };
+        copyUserPromptBtn.onclick = () => {
+            if (currentUserPromptCache) navigator.clipboard.writeText(currentUserPromptCache);
+            else alert('لا يوجد طلب مستخدم حالي');
+        };
+        sendBtn.onclick = sendPrompt;
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendPrompt();
+            }
+        });
+
+        // Initialize
+        sidebarGraph = initThree('threeContainer');
+        loadChatHistory();
+        loadApiKeyStatus();
+
+
+
+        const socket = io();
+        let currentSessionId = null;
+
+        // Initialize xterm
+        const term = new Terminal({ cursorBlink: true });
+        term.open(document.getElementById('terminal-container'));
+
+        // Request backend to start a CMD process
+        socket.emit('start_terminal', { cwd: 'C:\\' });
+
+        // Listen for terminal start confirmation
+        socket.on('terminal_started', (data) => {
+            currentSessionId = data.session_id;
+            term.writeln('\x1b[32m*** CompLoca Interactive Terminal Started ***\x1b[0m\r\n');
+        });
+
+        // Listen for stdout from backend
+        socket.on('terminal_output', (data) => {
+            term.write(data.data);
+        });
+
+        // Listen for stderr from backend
+        socket.on('terminal_error', (data) => {
+            term.write('\x1b[31m' + data.data + '\x1b[0m');
+        });
+
+        // Send user keystrokes to backend
+        term.onData((input) => {
+            if (currentSessionId) {
+                socket.emit('terminal_input', { session_id: currentSessionId, input: input });
+            }
+        });
+    </script>
+</body>
+
+</html>

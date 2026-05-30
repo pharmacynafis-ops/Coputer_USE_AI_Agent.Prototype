@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضافة أداة جديدة | AI Computer Use Agent</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0a0f1a 0%, #0f1622 100%);
+            color: #eef2ff;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .card {
+            background: rgba(18, 25, 40, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            padding: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #a5f3fc, #818cf8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle { color: #94a3b8; margin-bottom: 2rem; font-size: 0.9rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.5rem; color: #cbd5ff; }
+        input, textarea, select {
+            width: 100%;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #818cf8;
+            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.3);
+        }
+        textarea { font-family: 'JetBrains Mono', monospace; resize: vertical; min-height: 150px; }
+        .param-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .param-row input { flex: 1; }
+        .param-row button { background: #ef4444; border: none; padding: 8px 16px; border-radius: 12px; color: white; cursor: pointer; }
+        .add-param { background: #22c55e; border: none; padding: 8px 16px; border-radius: 12px; color: white; cursor: pointer; margin-bottom: 1rem; }
+        .button-group { display: flex; gap: 1rem; margin-top: 2rem; }
+        .btn-primary {
+            background: #818cf8;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 40px;
+            color: #0f172a;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+            font-size: 1rem;
+        }
+        .btn-secondary {
+            background: rgba(129, 140, 248, 0.2);
+            border: 1px solid #818cf8;
+            padding: 14px 28px;
+            border-radius: 40px;
+            color: #cbd5ff;
+            cursor: pointer;
+            flex: 1;
+        }
+        .btn-primary:hover { background: #a5b4fc; transform: scale(1.02); }
+        .preview-card { background: #0f172a; border-radius: 20px; padding: 1rem; margin-top: 1rem; border-left: 4px solid #818cf8; }
+        .code-preview { background: #0a0f1a; border-radius: 12px; padding: 1rem; font-family: monospace; font-size: 0.8rem; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1>✨ إضافة أداة جديدة إلى النظام</h1>
+        <div class="subtitle">الوكيل اقترح هذه الأداة بناءً على طلبك. يمكنك تعديل التفاصيل قبل الحفظ.</div>
+        
+        <form id="toolForm">
+            <div class="form-group">
+                <label>🔧 اسم الأداة (بالإنجليزية، underscore_case)</label>
+                <input type="text" id="toolName" required>
+            </div>
+            <div class="form-group">
+                <label>📖 وصف الأداة</label>
+                <textarea id="toolDescription" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>📌 الباراميترات (المعلمات)</label>
+                <div id="paramsContainer"></div>
+                <button type="button" class="add-param" onclick="addParameter()">+ إضافة بارامتر</button>
+            </div>
+            <div class="form-group">
+                <label>💻 كود Python نموذجي</label>
+                <textarea id="sampleCode" rows="8"></textarea>
+                <div class="preview-card">
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:8px;">🔍 معاينة الكود:</div>
+                    <div class="code-preview" id="codePreview"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>📝 مثال على استخدام المستخدم</label>
+                <textarea id="exampleUsage" rows="2"></textarea>
+            </div>
+            <div class="button-group">
+                <button type="button" class="btn-secondary" onclick="window.history.back()">إلغاء</button>
+                <button type="submit" class="btn-primary">💾 حفظ الأداة وإضافتها</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let parameters = [];
+    
+    function renderParameters() {
+        const container = document.getElementById('paramsContainer');
+        container.innerHTML = '';
+        parameters.forEach((param, index) => {
+            const div = document.createElement('div');
+            div.className = 'param-row';
+            div.innerHTML = `
+                <input type="text" placeholder="الاسم" value="${param.name || ''}" onchange="updateParam(${index}, 'name', this.value)">
+                <select onchange="updateParam(${index}, 'type', this.value)">
+                    <option value="str" ${param.type === 'str' ? 'selected' : ''}>str (نص)</option>
+                    <option value="int" ${param.type === 'int' ? 'selected' : ''}>int (رقم)</option>
+                    <option value="bool" ${param.type === 'bool' ? 'selected' : ''}>bool (صح/خطأ)</option>
+                    <option value="list" ${param.type === 'list' ? 'selected' : ''}>list (قائمة)</option>
+                </select>
+                <input type="text" placeholder="الوصف" value="${param.description || ''}" onchange="updateParam(${index}, 'description', this.value)">
+                <label style="display:flex; align-items:center; gap:8px; white-space:nowrap;">
+                    <input type="checkbox" ${param.required !== false ? 'checked' : ''} onchange="updateParam(${index}, 'required', this.checked)">
+                    إلزامي
+                </label>
+                <button type="button" onclick="removeParameter(${index})">✖</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+    
+    function addParameter() {
+        parameters.push({ name: "", type: "str", description: "", required: true });
+        renderParameters();
+    }
+    function removeParameter(index) { parameters.splice(index, 1); renderParameters(); }
+    function updateParam(index, field, value) { parameters[index][field] = value; }
+    
+    function updateCodePreview() {
+        const code = document.getElementById('sampleCode').value;
+        document.getElementById('codePreview').innerText = code;
+    }
+    document.getElementById('sampleCode').addEventListener('input', updateCodePreview);
+    
+    // تحميل البيانات المقترحة من الوكيل
+    const toolData = {{ tool_data | tojson }};
+    const details = toolData.tool_details || {};
+    
+    document.getElementById('toolName').value = details.tool_name || '';
+    document.getElementById('toolDescription').value = details.tool_description || '';
+    document.getElementById('sampleCode').value = details.sample_code || '';
+    document.getElementById('exampleUsage').value = details.example_usage || toolData.original_prompt || '';
+    
+    if (details.parameters && Array.isArray(details.parameters)) {
+        parameters = details.parameters;
+        renderParameters();
+    } else {
+        renderParameters();
+    }
+    updateCodePreview();
+    
+    document.getElementById('toolForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = {
+            tool_name: document.getElementById('toolName').value,
+            tool_description: document.getElementById('toolDescription').value,
+            parameters: parameters,
+            sample_code: document.getElementById('sampleCode').value,
+            example_usage: document.getElementById('exampleUsage').value
+        };
+        const res = await fetch('/api/save_new_tool', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        const result = await res.json();
+        if (result.status === 'saved') {
+            alert(`✅ تم حفظ الأداة "${result.tool_name}" بنجاح! سيتم تحميلها عند إعادة تشغيل الخادم.`);
+            window.location.href = '/';
+        } else {
+            alert('❌ حدث خطأ أثناء حفظ الأداة');
+        }
+    });
+</script>
+</body>
+</html>
