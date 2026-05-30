@@ -92,6 +92,10 @@ OPENROUTER_API_KEY=sk-or-xxxxxxxxxxxxxxxxxxxxxxxx
 افتح **Command Prompt** داخل مجلد المشروع، ثم نفِّذ الأمر التالي:
 
 ```bash
+pip install -r  requirements.txt
+```
+
+```bash
 python server.py
 ```
 
