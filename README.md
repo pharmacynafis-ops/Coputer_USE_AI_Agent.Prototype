@@ -183,6 +183,6 @@ CompLoca مصمم ليكون **قاعدة صلبة** يمكنك البناء ع�
 
 ---
 
-<sub>Built with ❤️ | CompLoca © 2024</sub>
+<sub>Built with ❤️ | CompLoca © 2026</sub>
 
 </div>
