@@ -1,0 +1,36 @@
+# requirements.txt
+
+## Core Web Framework
+Flask==2.3.3
+Flask-CORS==4.0.0
+flask-socketio==5.3.4
+python-socketio==5.9.0
+eventlet==0.33.3
+
+## AI & LLM
+openai==1.6.1
+pydantic==2.5.0
+pydantic-ai==0.0.5
+pydantic-core==2.14.1
+
+## Web Terminal
+xterm==4.19.0
+
+## Utilities
+python-dotenv==1.0.0
+aiofiles==23.2.1
+requests==2.31.0
+
+## 3D Visualization (Three.js is frontend, but its Python tools are optional)
+# No Python package needed for Three.js (frontend library)
+
+## Optional: For advanced features
+# watchdog==3.0.0  # for file watching
+# pytest==7.4.3    # for testing
+
+## Security & Validation
+# No additional packages needed for current security implementation
+
+## Note: 
+# - xterm is served via CDN, not pip-installed
+# - Three.js is a frontend library, not required in Python requirements
